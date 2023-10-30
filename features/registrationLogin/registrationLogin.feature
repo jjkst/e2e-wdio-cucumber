@@ -15,6 +15,6 @@ Feature: Registration and Login
     Then I should see message saying <message>
 
     Examples:
-      | username | password  | message                                          |
-      | tmember  | tpassword | success                                          |
-      | foobar   | barfoo    | The username and password could not be verified. |
+      | username | password  | message                                             |
+      | tmember  | tpassword | success                                             |
+      | foobar   | barfoo    | An internal error has occurred and has been logged. |

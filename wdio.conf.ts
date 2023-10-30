@@ -1,6 +1,8 @@
 import type { Options } from '@wdio/types';
-import { browser, $ } from '@wdio/globals';
+import { browser } from '@wdio/globals';
 import allure from 'allure-commandline';
+import Functions from './support/functions.ts';
+import Capabilities from './support/capabilities.ts';
 
 export const config: Options.Testrunner = {
     //
@@ -61,9 +63,9 @@ export const config: Options.Testrunner = {
     // Sauce Labs platform configurator - a great tool to configure your capabilities:
     // https://saucelabs.com/platform/platform-configurator
     //
-    capabilities: [{
-        browserName: 'chrome'
-    }],
+    capabilities: [
+        Capabilities.ChromeHeadless
+    ],
 
     //
     // ===================
@@ -90,9 +92,9 @@ export const config: Options.Testrunner = {
     // The only one supported by default is 'dot'
     // see also: https://webdriver.io/docs/dot-reporter
     reporters: ['spec', ['allure', {
-        outputDir: 'reports/allure-results',
+        outputDir: 'results/allure-results',
         disableWebdriverStepsReporting: true,
-        disableWebdriverScreenshotsReporting: true,
+        disableWebdriverScreenshotsReporting: false,
         useCucumberStepReporter: true,
         addConsoleLogs: true
     }]],
@@ -179,8 +181,7 @@ export const config: Options.Testrunner = {
      */
     before: async function (capabilities, specs) {
         // Cleanup database
-        await browser.url(`https://parabank.parasoft.com/parabank/admin.htm`)
-        await $('button[value="CLEAN"]').click();
+        await Functions.cleanDatabase();
     },
     /**
      * Runs before a WebdriverIO command gets executed.
@@ -226,8 +227,11 @@ export const config: Options.Testrunner = {
      * @param {number}             result.duration  duration of scenario in milliseconds
      * @param {object}             context          Cucumber World object
      */
-    // afterStep: function (step, scenario, result, context) {
-    // },
+    afterStep: async function (step, scenario, result, context) {
+        if (result.error) {
+            await browser.takeScreenshot();
+        }
+    },
     /**
      *
      * Runs after a Cucumber Scenario.
@@ -238,7 +242,8 @@ export const config: Options.Testrunner = {
      * @param {number}                 result.duration  duration of scenario in milliseconds
      * @param {object}                 context          Cucumber World object
      */
-    afterScenario: function (world, result, context) {
+    afterScenario: async function (world, result, context) {
+        await browser.takeScreenshot();
     },
     /**
      *
@@ -285,7 +290,7 @@ export const config: Options.Testrunner = {
      */
     onComplete: function(exitCode, config, capabilities, results) {
         const reportError = new Error('Could not generate Allure report')
-        const generation = allure(['generate', 'reports/allure-results', '--clean'])
+        const generation = allure(['generate', 'results/allure-results', '--clean'])
         return new Promise<void>((resolve, reject) => {
             const generationTimeout = setTimeout( () => reject(reportError), 5000);
             generation.on('exit', function(exitCode) {

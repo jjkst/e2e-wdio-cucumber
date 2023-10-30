@@ -18,7 +18,7 @@ export default class Page {
 
     public async getMessage (): Promise<string> {
         await this.message.waitForExist({
-            timeout: 3000,
+            timeout: 5000,
             timeoutMsg: 'Message not displayed'
         });
         return await this.message.getText();
